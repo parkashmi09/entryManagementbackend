@@ -15,5 +15,6 @@ router.get('/', apiLimiter, validatePagination, EntryController.getEntries);
 
 // Export functionality
 router.get('/export', exportLimiter, EntryController.exportEntries);
+router.get('/export/all', exportLimiter, EntryController.exportAllEntries);
 
 export default router; 

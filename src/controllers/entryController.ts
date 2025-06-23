@@ -22,7 +22,7 @@ export class EntryController {
         return;
       }
 
-      const { srNo, vehicleNo, nameDetails, date, netWeight, moisture, gatePassNo, mobileNo, unload, shortage, remarks } = req.body;
+      const { srNo, vehicleNo, nameDetails, date, netWeight, moisture, gatePassNo, mobileNo, unload, shortage, remarks, rate } = req.body;
 
       const existingEntry = await Entry.findOne({ srNo, userId: req.user.id });
       if (existingEntry) {
@@ -33,7 +33,7 @@ export class EntryController {
       const entry = new Entry({
         srNo, vehicleNo, nameDetails,
         date: date ? new Date(date) : new Date(),
-        netWeight, moisture, gatePassNo, mobileNo, unload, shortage, remarks,
+        netWeight, moisture, gatePassNo, mobileNo, unload, shortage, remarks, rate,
         userId: req.user.id,
       });
 
@@ -135,6 +135,7 @@ export class EntryController {
         'Unload': entry.unload || '',
         'Shortage': entry.shortage || '',
         'Remarks': entry.remarks || '',
+        'Rate': entry.rate || '',
         'Created At': entry.createdAt.toISOString(),
       }));
 
@@ -152,6 +153,58 @@ export class EntryController {
     } catch (error) {
       console.error('Export entries error:', error);
       ResponseUtils.error(res, 'Failed to export entries');
+    }
+  }
+
+  /**
+   * Export ALL entries to Excel (no filters, no pagination)
+   */
+  static async exportAllEntries(req: AuthenticatedRequest, res: Response): Promise<void> {
+    try {
+      if (!req.user) {
+        ResponseUtils.unauthorized(res, 'Authentication required');
+        return;
+      }
+
+      // Get ALL entries for the user without any filters or pagination
+      const entries = await Entry.find({ userId: req.user.id }).sort({ date: -1, createdAt: -1 });
+
+      if (entries.length === 0) {
+        ResponseUtils.notFound(res, 'No entries found for export');
+        return;
+      }
+
+      const exportData = entries.map((entry, index) => ({
+        'S.No': index + 1,
+        'Sr No': entry.srNo,
+        'Vehicle No': entry.vehicleNo,
+        'Name Details': entry.nameDetails,
+        'Date': entry.date.toISOString().split('T')[0],
+        'Net Weight': entry.netWeight || '',
+        'Moisture': entry.moisture || '',
+        'Gate Pass No': entry.gatePassNo || '',
+        'Mobile No': entry.mobileNo || '',
+        'Unload': entry.unload || '',
+        'Shortage': entry.shortage || '',
+        'Remarks': entry.remarks || '',
+        'Rate': entry.rate || '',
+        'Created At': entry.createdAt.toISOString(),
+      }));
+
+      const workbook = XLSX.utils.book_new();
+      const worksheet = XLSX.utils.json_to_sheet(exportData);
+      XLSX.utils.book_append_sheet(workbook, worksheet, 'All Entries');
+
+      const buffer = XLSX.write(workbook, { type: 'buffer', bookType: 'xlsx' });
+
+      const filename = `all_entries_export_${new Date().toISOString().split('T')[0]}.xlsx`;
+      res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+      res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+
+      res.send(buffer);
+    } catch (error) {
+      console.error('Export all entries error:', error);
+      ResponseUtils.error(res, 'Failed to export all entries');
     }
   }
 } 

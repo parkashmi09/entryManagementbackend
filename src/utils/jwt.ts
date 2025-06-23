@@ -8,11 +8,15 @@ export class JWTUtils {
    */
   static generateTokens(payload: TokenPayload): AuthTokens {
     const accessToken = jwt.sign(payload, config.JWT_SECRET, {
-      expiresIn: '7d'
+      expiresIn: '30d',
+      issuer: 'entry-management-server',
+      audience: 'entry-management-app',
     });
 
     const refreshToken = jwt.sign(payload, config.JWT_REFRESH_SECRET, {
-      expiresIn: '30d'
+      expiresIn: '90d',
+      issuer: 'entry-management-server',
+      audience: 'entry-management-app',
     });
 
     return {

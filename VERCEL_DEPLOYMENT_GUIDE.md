@@ -67,8 +67,6 @@ vercel --prod
 
 ```
 EntryManagementServer/
-├── api/
-│   └── index.js              # Vercel serverless function entry point
 ├── dist/                     # Compiled TypeScript files
 ├── src/                      # Source TypeScript files
 ├── vercel.json              # Vercel configuration
@@ -84,67 +82,32 @@ EntryManagementServer/
   "version": 2,
   "builds": [
     {
-      "src": "api/index.js",
+      "src": "package.json",
       "use": "@vercel/node"
     }
   ],
   "routes": [
     {
-      "src": "/api/v1/(.*)",
-      "dest": "/api/index.js"
-    },
-    {
-      "src": "/ping",
-      "dest": "/api/index.js"
-    },
-    {
-      "src": "/",
-      "dest": "/api/index.js"
-    },
-    {
       "src": "/(.*)",
-      "dest": "/api/index.js"
+      "dest": "/"
     }
   ],
   "env": {
     "NODE_ENV": "production"
   },
-  "functions": {
-    "api/index.js": {
-      "maxDuration": 30
-    }
-  },
   "regions": ["bom1"]
 }
 ```
 
-### api/index.js (Serverless Function)
-```javascript
-const Server = require('../dist/index.js').default;
-const { database } = require('../dist/config/database.js');
-
-let server;
-let isInitialized = false;
-
-module.exports = async (req, res) => {
-  try {
-    if (!isInitialized) {
-      server = new Server();
-      await database.connect();
-      isInitialized = true;
-      console.log('✅ Server initialized for Vercel');
-    }
-    
-    return server.getApp()(req, res);
-  } catch (error) {
-    console.error('❌ Vercel function error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Internal server error',
-      error: process.env.NODE_ENV === 'development' ? error.message : undefined
-    });
+### package.json scripts
+```json
+{
+  "scripts": {
+    "start": "node dist/index.js",
+    "build": "tsc",
+    "vercel-build": "npm run build"
   }
-};
+}
 ```
 
 ## 🌐 API Endpoints After Deployment
@@ -181,9 +144,9 @@ const apiService = {
 
 ### Common Issues:
 
-1. **Function Timeout**
-   - Increase `maxDuration` in vercel.json
-   - Optimize database queries
+1. **Build Failures**
+   - Run `npm run build` locally to check for TypeScript errors
+   - Ensure all dependencies are in package.json
 
 2. **Environment Variables Not Working**
    - Ensure variables are set in Vercel Dashboard
@@ -194,20 +157,21 @@ const apiService = {
    - Verify connection string
    - Check network access in MongoDB Atlas
 
-4. **Build Failures**
-   - Run `npm run build` locally to check for TypeScript errors
-   - Ensure all dependencies are in package.json
+4. **CORS Issues**
+   - Update CORS_ORIGIN environment variable
+   - Add your frontend domain to allowed origins
 
-### Debug Commands:
+5. **Deployment Timeout**
+   - Ensure MongoDB connects quickly
+   - Check for any blocking operations in startup
+
+### Quick Test Commands:
 ```bash
-# Check deployment logs
-vercel logs
+# Test locally after build
+npm run build && npm start
 
-# Run local build
-npm run build
-
-# Test locally
-npm run dev
+# Deploy to Vercel
+vercel --prod
 ```
 
 ## 🔄 Continuous Deployment

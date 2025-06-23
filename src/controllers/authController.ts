@@ -167,6 +167,7 @@ export class AuthController {
    * Get current user profile
    */
   static async getProfile(req: AuthenticatedRequest, res: Response): Promise<void> {
+    console.log('Getting profile for user:', req.user?.id);
     try {
       if (!req.user) {
         ResponseUtils.unauthorized(res, 'Authentication required');

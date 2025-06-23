@@ -39,6 +39,7 @@ export interface IEntry extends Document {
   unload?: string;
   shortage?: string;
   remarks?: string;
+  rate?: string;
   userId: string;
   createdAt: Date;
   updatedAt: Date;
@@ -57,6 +58,7 @@ export interface EntryResponse {
   unload?: string;
   shortage?: string;
   remarks?: string;
+  rate?: string;
   createdAt?: string;
 }
 

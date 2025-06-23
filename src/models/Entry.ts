@@ -61,6 +61,11 @@ const entrySchema = new Schema<IEntry>({
     trim: true,
     maxlength: [200, 'Remarks cannot be more than 200 characters'],
   },
+  rate: {
+    type: String,
+    trim: true,
+    maxlength: [20, 'Rate cannot be more than 20 characters'],
+  },
   userId: {
     type: String,
     required: [true, 'User ID is required'],

@@ -99,6 +99,11 @@ export const validateCreateEntry = [
     .trim()
     .isLength({ max: 200 })
     .withMessage('Remarks cannot be more than 200 characters'),
+  body('rate')
+    .optional()
+    .trim()
+    .isLength({ max: 20 })
+    .withMessage('Rate cannot be more than 20 characters'),
 ];
 
 export const validateUpdateEntry = [
@@ -155,6 +160,11 @@ export const validateUpdateEntry = [
     .trim()
     .isLength({ max: 200 })
     .withMessage('Remarks cannot be more than 200 characters'),
+  body('rate')
+    .optional()
+    .trim()
+    .isLength({ max: 20 })
+    .withMessage('Rate cannot be more than 20 characters'),
 ];
 
 // Query validation rules

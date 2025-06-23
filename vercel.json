@@ -1,5 +1,6 @@
 {
   "version": 2,
+  "name": "entry-management-server",
   "builds": [
     {
       "src": "api/index.js",
