@@ -22,12 +22,15 @@ async function createServer() {
     console.log('🏗️ Creating server instance...');
     const server = new Server();
     
+    // Get the Express app directly without calling start()
     cachedServer = server.getApp();
     console.log('✅ Server cached and ready');
     
     return cachedServer;
   } catch (error) {
     console.error('❌ Server initialization failed:', error);
+    console.error('Error details:', error.message);
+    console.error('Stack trace:', error.stack);
     throw error;
   }
 }
@@ -54,11 +57,15 @@ module.exports = async (req, res) => {
     
   } catch (error) {
     console.error('💥 Function error:', error);
+    console.error('Error message:', error.message);
     
     return res.status(500).json({
       success: false,
-      message: 'Server error',
-      error: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
+      message: 'Server initialization failed',
+      error: process.env.NODE_ENV === 'development' ? {
+        message: error.message,
+        stack: error.stack
+      } : 'Internal server error'
     });
   }
 }; 
