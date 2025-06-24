@@ -207,4 +207,113 @@ export class EntryController {
       ResponseUtils.error(res, 'Failed to export all entries');
     }
   }
+
+  /**
+   * Update an existing entry
+   */
+  static async updateEntry(req: AuthenticatedRequest, res: Response): Promise<void> {
+    try {
+      if (!req.user) {
+        ResponseUtils.unauthorized(res, 'Authentication required');
+        return;
+      }
+
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        ResponseUtils.validationError(res, errors.array());
+        return;
+      }
+
+      const { id } = req.params;
+      const { srNo, vehicleNo, nameDetails, date, netWeight, moisture, gatePassNo, mobileNo, unload, shortage, remarks, rate } = req.body;
+
+      // Find the entry and verify ownership
+      const entry = await Entry.findOne({ _id: id, userId: req.user.id });
+      if (!entry) {
+        ResponseUtils.notFound(res, 'Entry not found or unauthorized');
+        return;
+      }
+
+      // Check if srNo is being changed and if it conflicts with another entry
+      if (srNo !== entry.srNo) {
+        const existingEntry = await Entry.findOne({ srNo, userId: req.user.id, _id: { $ne: id } });
+        if (existingEntry) {
+          ResponseUtils.conflict(res, `Serial number ${srNo} already exists`);
+          return;
+        }
+      }
+
+      // Update the entry
+      const updatedEntry = await Entry.findByIdAndUpdate(
+        id,
+        {
+          srNo, vehicleNo, nameDetails,
+          date: date ? new Date(date) : entry.date,
+          netWeight, moisture, gatePassNo, mobileNo, unload, shortage, remarks, rate,
+          updatedAt: new Date(),
+        },
+        { new: true }
+      );
+
+      ResponseUtils.success(res, 'Entry updated successfully', updatedEntry);
+    } catch (error) {
+      console.error('Update entry error:', error);
+      ResponseUtils.error(res, 'Failed to update entry');
+    }
+  }
+
+  /**
+   * Delete an entry
+   */
+  static async deleteEntry(req: AuthenticatedRequest, res: Response): Promise<void> {
+    try {
+      if (!req.user) {
+        ResponseUtils.unauthorized(res, 'Authentication required');
+        return;
+      }
+
+      const { id } = req.params;
+
+      // Find the entry and verify ownership
+      const entry = await Entry.findOne({ _id: id, userId: req.user.id });
+      if (!entry) {
+        ResponseUtils.notFound(res, 'Entry not found or unauthorized');
+        return;
+      }
+
+      // Delete the entry
+      await Entry.findByIdAndDelete(id);
+
+      ResponseUtils.success(res, 'Entry deleted successfully', { id });
+    } catch (error) {
+      console.error('Delete entry error:', error);
+      ResponseUtils.error(res, 'Failed to delete entry');
+    }
+  }
+
+  /**
+   * Get a single entry by ID
+   */
+  static async getEntryById(req: AuthenticatedRequest, res: Response): Promise<void> {
+    try {
+      if (!req.user) {
+        ResponseUtils.unauthorized(res, 'Authentication required');
+        return;
+      }
+
+      const { id } = req.params;
+
+      // Find the entry and verify ownership
+      const entry = await Entry.findOne({ _id: id, userId: req.user.id });
+      if (!entry) {
+        ResponseUtils.notFound(res, 'Entry not found or unauthorized');
+        return;
+      }
+
+      ResponseUtils.success(res, 'Entry retrieved successfully', entry);
+    } catch (error) {
+      console.error('Get entry by ID error:', error);
+      ResponseUtils.error(res, 'Failed to get entry');
+    }
+  }
 } 

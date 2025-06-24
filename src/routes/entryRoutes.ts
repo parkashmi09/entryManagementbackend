@@ -12,6 +12,9 @@ router.use(authenticate);
 // CRUD operations
 router.post('/', apiLimiter, validateCreateEntry, EntryController.createEntry);
 router.get('/', apiLimiter, validatePagination, EntryController.getEntries);
+router.get('/:id', apiLimiter, EntryController.getEntryById);
+router.put('/:id', apiLimiter, validateUpdateEntry, EntryController.updateEntry);
+router.delete('/:id', apiLimiter, EntryController.deleteEntry);
 
 // Export functionality
 router.get('/export', exportLimiter, EntryController.exportEntries);
